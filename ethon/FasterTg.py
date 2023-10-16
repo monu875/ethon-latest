@@ -5,6 +5,7 @@ import asyncio
 import hashlib
 import logging
 import math
+import time
 import os
 from collections import defaultdict
 from typing import (
@@ -292,6 +293,7 @@ class ParallelTransferrer:
         self.upload_ticker = (self.upload_ticker + 1) % len(self.senders)
 
     async def finish_upload(self) -> None:
+        time.sleep(20)
         await self._cleanup()
 
     async def download(
@@ -313,8 +315,10 @@ class ParallelTransferrer:
                 data = await task
                 if not data:
                     break
+                time.sleep(20)
                 yield data
                 part += 1
+        time.sleep(20)
         await self._cleanup()
 
 
@@ -328,6 +332,8 @@ def stream_file(file_to_stream: BinaryIO, chunk_size=1024):
         data_read = file_to_stream.read(chunk_size)
         if not data_read:
             break
+        time.sleep(20)
+          
         yield data_read
 
 
@@ -354,6 +360,7 @@ async def _internal_transfer_to_telegram(
             hash_md5.update(data)
         if len(buffer) == 0 and len(data) == part_size:
             await uploader.upload(data)
+            time.sleep(20)
             continue
         new_len = len(buffer) + len(data)
         if new_len >= part_size:
@@ -394,11 +401,12 @@ async def download_file(
 
 
 async def upload_file(
-    client: TelegramClient,
+    client: TelegramClient, 
     file: BinaryIO,
     filename: str,
     progress_callback: callable = None,
 ) -> TypeInputFile:
+    time.sleep(6)
     return (
         await _internal_transfer_to_telegram(client, file, filename, progress_callback)
     )[0]
