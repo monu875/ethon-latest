@@ -40,7 +40,7 @@ def videometadata(file):
 
 # function to find the resolution of the input video file
 
-import subprocess
+import subprocess,time
 import shlex
 import json
 
@@ -96,4 +96,5 @@ def video_metadata(file):
             print(e)
             height, width, duration = 720, 1280, 0
     data = {'width' : width, 'height' : height, 'duration' : duration }
+    time.sleep(20)
     return data
