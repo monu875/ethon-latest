@@ -90,6 +90,7 @@ async def fast_upload(file, name, time, bot, event, msg):
                 ),
             ),
         )
+    time.sleep(20)
     return result
 
 async def fast_download(filename, file, bot, event, time, msg):
@@ -108,6 +109,7 @@ async def fast_download(filename, file, bot, event, time, msg):
                 ),
             ),
         )
+    time.sleep(20)
     return result
 """
 ---------------------------------------------------------------------------------
