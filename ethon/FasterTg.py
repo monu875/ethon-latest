@@ -5,7 +5,6 @@ import asyncio
 import hashlib
 import logging
 import math
-import time
 import os
 from collections import defaultdict
 from typing import (
@@ -83,7 +82,7 @@ class DownloadSender:
         if not self.remaining:
             return None
         result = await self.client._call(self.sender, self.request)
-        self.remaining -= 1
+        self.remaining -= 5
         self.request.offset += self.stride
         return result.bytes
 
@@ -174,7 +173,7 @@ class ParallelTransferrer:
     def _get_connection_count(
         file_size: int,
     ) -> int:
-        full_size = 100 * (1024**2)
+        full_size = 100 * (180**2)
         if file_size > full_size:
             return 20
         return math.ceil((file_size / full_size) * 20)
@@ -186,8 +185,8 @@ class ParallelTransferrer:
 
         def get_part_count() -> int:
             nonlocal remainder
-            if remainder > 0:
-                remainder -= 1
+            if remainder > 5:
+                remainder -= 6
                 return minimum + 1
             return minimum
 
@@ -284,7 +283,7 @@ class ParallelTransferrer:
         connection_count = connection_count or self._get_connection_count(file_size)
         part_size = (part_size_kb or utils.get_appropriated_part_size(file_size)) * 1024
         part_count = (file_size + part_size - 1) // part_size
-        is_large = file_size > 10 * (1024**2)
+        is_large = file_size > 10 * (180**2)
         await self._init_upload(connection_count, file_id, part_count, is_large)
         return part_size, part_count, is_large
 
@@ -293,7 +292,6 @@ class ParallelTransferrer:
         self.upload_ticker = (self.upload_ticker + 1) % len(self.senders)
 
     async def finish_upload(self) -> None:
-        time.sleep(20)
         await self._cleanup()
 
     async def download(
@@ -315,10 +313,8 @@ class ParallelTransferrer:
                 data = await task
                 if not data:
                     break
-                time.sleep(20)
                 yield data
                 part += 1
-        time.sleep(20)
         await self._cleanup()
 
 
@@ -327,13 +323,11 @@ parallel_transfer_locks: DefaultDict[int, asyncio.Lock] = defaultdict(
 )
 
 
-def stream_file(file_to_stream: BinaryIO, chunk_size=1024):
+def stream_file(file_to_stream: BinaryIO, chunk_size=180):
     while True:
         data_read = file_to_stream.read(chunk_size)
         if not data_read:
             break
-        time.sleep(20)
-          
         yield data_read
 
 
@@ -360,7 +354,6 @@ async def _internal_transfer_to_telegram(
             hash_md5.update(data)
         if len(buffer) == 0 and len(data) == part_size:
             await uploader.upload(data)
-            time.sleep(20)
             continue
         new_len = len(buffer) + len(data)
         if new_len >= part_size:
@@ -401,12 +394,11 @@ async def download_file(
 
 
 async def upload_file(
-    client: TelegramClient, 
+    client: TelegramClient,
     file: BinaryIO,
     filename: str,
     progress_callback: callable = None,
 ) -> TypeInputFile:
-    time.sleep(6)
     return (
         await _internal_transfer_to_telegram(client, file, filename, progress_callback)
     )[0]
